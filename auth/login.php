@@ -3,7 +3,7 @@ session_start();
 require_once '../config/db.php';
 
 if (isset($_SESSION['user_id'])) {
-    header("Location: /card_vault_php/pages/dashboard.php");
+    header("Location: /pages/dashboard.php");
     exit();
 }
 
@@ -31,7 +31,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             "INSERT INTO audit_log (user_id,action,table_name,ip_address)
              VALUES ($uid,'LOGIN','users','$ip')"
         );
-        header("Location: /card_vault_php/pages/dashboard.php");
+        header("Location: /pages/dashboard.php");
         exit();
     }
     $error = 'Invalid username or password.';

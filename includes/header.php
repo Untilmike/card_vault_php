@@ -54,21 +54,21 @@ $role = $_SESSION['role'] ?? '';
   <span class="brand">🏦 Card Vault</span>
   <div>
     <?php if (in_array($role, ['admin','merchant'])): ?>
-      <a href="/card_vault_php/pages/customers.php">Customers</a>
-      <a href="/card_vault_php/pages/cards.php">Cards</a>
-      <a href="/card_vault_php/pages/invoices.php">Invoices</a>
+      <a href="/pages/customers.php">Customers</a>
+      <a href="/pages/cards.php">Cards</a>
+      <a href="/pages/invoices.php">Invoices</a>
     <?php endif; ?>
     <?php if ($role === 'cashier'): ?>
-      <a href="/card_vault_php/pages/invoices.php">Invoices</a>
+      <a href="/pages/invoices.php">Invoices</a>
     <?php endif; ?>
     <?php if (in_array($role, ['admin','auditor'])): ?>
-      <a href="/card_vault_php/pages/audit.php">Audit Log</a>
+      <a href="/pages/audit.php">Audit Log</a>
     <?php endif; ?>
-    <a href="/card_vault_php/auth/logout.php" style="color:#e74c3c">Logout</a>
+    <a href="/auth/logout.php" style="color:#e74c3c">Logout</a>
   </div>
   <small style="color:#aaa">
-    <?= htmlspecialchars($_SESSION['username'] ?? '') ?> &middot; <?= $role ?>
+    <?= htmlspecialchars($_SESSION['username'] ?? '') ?>
+    &middot; <?= $role ?>
   </small>
 </nav>
-<div class="container">
-    
+<div class="container"></div>
