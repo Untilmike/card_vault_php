@@ -1,21 +1,34 @@
 <?php
 define('AES_KEY', 'ExactlySixteen12');
 
-// Show exactly what variables we have
-$url        = getenv('MYSQL_PUBLIC_URL');
-$mysqlhost  = getenv('MYSQLHOST');
-$mysqluser  = getenv('MYSQLUSER');
-$mysqlpass  = getenv('MYSQLPASSWORD');
-$mysqldb    = getenv('MYSQLDATABASE');
-$mysqlport  = getenv('MYSQLPORT');
+$url   = getenv('mysql://root:DXRbaLjFAvfSFwGlhSuLuastUxNaJJyf@maglev.proxy.rlwy.net:59987/railway');
+$parts = parse_url($url);
 
-echo "<pre>";
-echo "MYSQL_PUBLIC_URL: " . ($url ? substr($url, 0, 30) . "..." : "NOT SET") . "\n";
-echo "MYSQLHOST: " . ($mysqlhost ?: "NOT SET") . "\n";
-echo "MYSQLUSER: " . ($mysqluser ?: "NOT SET") . "\n";
-echo "MYSQLDB: "   . ($mysqldb   ?: "NOT SET") . "\n";
-echo "MYSQLPORT: " . ($mysqlport ?: "NOT SET") . "\n";
-echo "Extensions: " . implode(', ', get_loaded_extensions()) . "\n";
-echo "</pre>";
-die();
+$host = $parts['host'];
+$user = $parts['user'];
+$pass = $parts['pass'];
+$db   = ltrim($parts['path'], '/');
+$port = $parts['port'] ?? 3306;
+
+// Use mysqlnd directly via PDO with socket
+if (!extension_loaded('pdo_mysql')) {
+    // Manually register mysqlnd as pdo_mysql
+    if (!dl('pdo_mysql.so')) {
+        die("Cannot load pdo_mysql. Available: " . implode(', ', get_loaded_extensions()));
+    }
+}
+
+try {
+    $conn = new PDO(
+        "mysql:host={$host};port={$port};dbname={$db};charset=utf8mb4",
+        $user,
+        $pass,
+        [
+            PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
+            PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+        ]
+    );
+} catch (PDOException $e) {
+    die("Connection failed: " . $e->getMessage());
+}
 ?>
