@@ -2,7 +2,7 @@
 define('AES_KEY', 'ExactlySixteen12');
 
 // Parse public URL
-$url   = getenv('mysql://root:DXRbaLjFAvfSFwGlhSuLuastUxNaJJyf@maglev.proxy.rlwy.net:59987/railwa');
+$url   = getenv('mysql://root:DXRbaLjFAvfSFwGlhSuLuastUxNaJJyf@maglev.proxy.rlwy.net:59987/railway');
 $parts = parse_url($url);
 
 $host = $parts['host'];
