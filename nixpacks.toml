@@ -1,8 +1,5 @@
 [phases.setup]
-nixPkgs = ["php81", "php81Extensions.pdo_mysql", "php81Extensions.mysqlnd", "php81Extensions.mysqli"]
-
-[phases.install]
-cmds = ["php -m | grep -i mysql"]
+nixPkgs = ["php82", "php82Extensions.pdo_mysql"]
 
 [start]
 cmd = "php -S 0.0.0.0:$PORT -t ."

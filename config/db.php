@@ -1,20 +1,22 @@
 <?php
 define('AES_KEY', 'ExactlySixteen12');
 
-$host = getenv('MYSQLHOST')     ?: 'localhost';
-$db   = getenv('MYSQLDATABASE') ?: '';
-$user = getenv('MYSQLUSER')     ?: 'root';
-$pass = getenv('MYSQLPASSWORD') ?: '';
-$port = getenv('MYSQLPORT')     ?: '3306';
+// Parse the public MySQL URL
+$url = getenv('mysql://root:DXRbaLjFAvfSFwGlhSuLuastUxNaJJyf@maglev.proxy.rlwy.net:59987/railway');
 
-// Show all loaded extensions for debugging
-$loaded = get_loaded_extensions();
-$mysql_exts = array_filter($loaded, function($e) {
-    return stripos($e, 'mysql') !== false || stripos($e, 'pdo') !== false;
-});
-
-if (empty($mysql_exts)) {
-    die("No MySQL extensions found. All extensions: " . implode(', ', $loaded));
+if ($url) {
+    $parts = parse_url($url);
+    $host  = $parts['host'];
+    $user  = $parts['user'];
+    $pass  = $parts['pass'];
+    $db    = ltrim($parts['path'], '/');
+    $port  = $parts['port'] ?? 3306;
+} else {
+    $host  = getenv('MYSQLHOST')     ?: 'localhost';
+    $user  = getenv('MYSQLUSER')     ?: 'root';
+    $pass  = getenv('MYSQLPASSWORD') ?: '';
+    $db    = getenv('MYSQLDATABASE') ?: '';
+    $port  = getenv('MYSQLPORT')     ?: '3306';
 }
 
 try {
@@ -23,8 +25,12 @@ try {
         PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
         PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
     ]);
-} catch (PDOException $e) {
-    die("Connection failed: " . $e->getMessage() .
-        " | MySQL extensions: " . implode(', ', $mysql_exts));
+} catch (Exception $e) {
+    die("Connection failed: " . $e->getMessage());
+}
+
+// PDO helper to mimic mysqli insert_id
+function last_insert_id($conn) {
+    return $conn->lastInsertId();
 }
 ?>
