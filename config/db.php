@@ -1,8 +1,8 @@
 <?php
-define('DB_HOST', 'sql311.infinityfree.com');  // MySQL Host Name
-define('DB_USER', 'if0_41594028');           // MySQL User Name
-define('DB_PASS', 'Ruiru240');   // MySQL Password
-define('DB_NAME', 'if0_41594028_epiz_123456_cardvault'); // MySQL DB Name
+define('DB_HOST', getenv('MYSQLHOST'));
+define('DB_USER', getenv('MYSQLUSER'));
+define('DB_PASS', getenv('MYSQLPASSWORD'));
+define('DB_NAME', getenv('MYSQLDATABASE'));
 define('AES_KEY', 'ExactlySixteen12');
 
 $conn = new mysqli(DB_HOST, DB_USER, DB_PASS, DB_NAME);
