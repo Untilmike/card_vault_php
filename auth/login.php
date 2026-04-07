@@ -1,4 +1,6 @@
 <?php
+ini_set('display_errors', 1);
+error_reporting(E_ALL);
 session_start();
 require_once '../config/db.php';
 
@@ -15,9 +17,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $stmt = $conn->prepare(
         "SELECT * FROM users WHERE username=? AND password_hash=?"
     );
-    $stmt->bind_param("ss", $username, $password);
-    $stmt->execute();
-    $user = $stmt->get_result()->fetch_assoc();
+    $stmt->execute([$username, $password]);
+    $user = $stmt->fetch();
 
     if ($user) {
         $_SESSION['user_id']     = $user['user_id'];
@@ -27,7 +28,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         $uid = $user['user_id'];
         $ip  = $_SERVER['REMOTE_ADDR'];
-        $conn->query(
+        $conn->exec(
             "INSERT INTO audit_log (user_id,action,table_name,ip_address)
              VALUES ($uid,'LOGIN','users','$ip')"
         );
