@@ -4,22 +4,24 @@ require_role(['admin','merchant']);
 require_once '../config/db.php';
 include '../includes/header.php';
 
-$mid      = $_SESSION['merchant_id'] ?? 1;
-$key      = AES_KEY;
-$success  = $error = '';
+$mid     = $_SESSION['merchant_id'] ?? 1;
+$key     = AES_KEY;
+$success = $error = '';
 
-$customers = $conn->query(
-    "SELECT customer_id,full_name FROM customers WHERE merchant_id=$mid"
+$stmt = $conn->prepare(
+    "SELECT customer_id,full_name FROM customers WHERE merchant_id=?"
 );
+$stmt->execute([$mid]);
+$customers = $stmt->fetchAll();
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $cid     = intval($_POST['customer_id']);
-    $type    = $conn->real_escape_string($_POST['card_type']);
+    $type    = $_POST['card_type'];
     $cardnum = preg_replace('/\s+/', '', $_POST['card_number']);
     $last4   = substr($cardnum, -4);
-    $expiry  = $conn->real_escape_string($_POST['expiry']);
-    $cvv     = $conn->real_escape_string($_POST['cvv']);
-    $billing = $conn->real_escape_string($_POST['billing']);
+    $expiry  = $_POST['expiry'];
+    $cvv     = $_POST['cvv'];
+    $billing = $_POST['billing'];
     $token   = bin2hex(random_bytes(16));
 
     $stmt = $conn->prepare(
@@ -32,20 +34,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                  AES_ENCRYPT(?,?),
                  AES_ENCRYPT(?,?))"
     );
-    $stmt->bind_param(
-        "isssssssssss",
+    if ($stmt->execute([
         $cid, $token, $type, $last4,
-        $expiry,  $key,
+        $expiry, $key,
         $cardnum, $key,
-        $cvv,     $key,
+        $cvv, $key,
         $billing, $key
-    );
-
-    if ($stmt->execute()) {
-        log_action($conn, 'INSERT', 'cards', $conn->insert_id);
+    ])) {
+        log_action($conn, 'INSERT', 'cards', $conn->lastInsertId());
         $success = "Card encrypted and saved. Token: <code>$token</code>";
     } else {
-        $error = "Error: " . $stmt->error;
+        $error = "Error saving card.";
     }
 }
 ?>
@@ -60,16 +59,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <label>Customer</label>
     <select name="customer_id" required>
       <option value="">-- Select Customer --</option>
-      <?php while ($c = $customers->fetch_assoc()): ?>
+      <?php foreach ($customers as $c): ?>
       <option value="<?= $c['customer_id'] ?>"
         <?= (isset($_GET['customer_id']) && $_GET['customer_id'] == $c['customer_id']) ? 'selected' : '' ?>>
         <?= htmlspecialchars($c['full_name']) ?>
       </option>
-      <?php endwhile; ?>
+      <?php endforeach; ?>
     </select>
     <label>Card Type</label>
     <select name="card_type">
-      <option>Visa</option><option>Mastercard</option><option>Amex</option>
+      <option>Visa</option>
+      <option>Mastercard</option>
+      <option>Amex</option>
     </select>
     <label>Card Number (sensitive)</label>
     <input name="card_number" maxlength="19" placeholder="1234 5678 9012 3456" required>
@@ -80,7 +81,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <label>Billing Address (sensitive)</label>
     <input name="billing" placeholder="e.g. 123 Main St, Nairobi" required>
     <button type="submit" class="btn btn-r">🔒 Encrypt and Save Card</button>
-    <a href="cards.php" class="btn" style="margin-left:8px">Cancel</a>
+    <a href="/pages/cards.php" class="btn" style="margin-left:8px">Cancel</a>
   </form>
 </div>
 </div></body></html>

@@ -6,20 +6,19 @@ include '../includes/header.php';
 
 $success = $error = '';
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $mid  = $_SESSION['merchant_id'] ?? 1;
-    $name = trim($_POST['full_name']);
-    $email= trim($_POST['email']);
-    $phone= trim($_POST['phone']);
+    $mid   = $_SESSION['merchant_id'] ?? 1;
+    $name  = trim($_POST['full_name']);
+    $email = trim($_POST['email']);
+    $phone = trim($_POST['phone']);
 
     $stmt = $conn->prepare(
         "INSERT INTO customers (merchant_id,full_name,email,phone) VALUES (?,?,?,?)"
     );
-    $stmt->bind_param("isss", $mid, $name, $email, $phone);
-    if ($stmt->execute()) {
-        log_action($conn, 'INSERT', 'customers', $conn->insert_id);
+    if ($stmt->execute([$mid, $name, $email, $phone])) {
+        log_action($conn, 'INSERT', 'customers', $conn->lastInsertId());
         $success = "Customer added successfully.";
     } else {
-        $error = "Error: " . $stmt->error;
+        $error = "Error saving customer.";
     }
 }
 ?>
@@ -38,7 +37,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <label>Phone Number</label>
     <input name="phone" placeholder="e.g. 0712345678">
     <button type="submit" class="btn btn-g">Save Customer</button>
-    <a href="customers.php" class="btn" style="margin-left:8px">Cancel</a>
+    <a href="/pages/customers.php" class="btn" style="margin-left:8px">Cancel</a>
   </form>
 </div>
 </div></body></html>

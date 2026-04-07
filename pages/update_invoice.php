@@ -8,9 +8,12 @@ $status = in_array($_GET['status'], ['paid','failed','pending'])
           ? $_GET['status'] : '';
 
 if ($status) {
-    $conn->query("UPDATE invoices SET status='$status' WHERE invoice_id=$id");
-    log_action($conn, 'UPDATE-'.$status, 'invoices', $id);
+    $stmt = $conn->prepare(
+        "UPDATE invoices SET status=? WHERE invoice_id=?"
+    );
+    $stmt->execute([$status, $id]);
+    log_action($conn, 'UPDATE-' . $status, 'invoices', $id);
 }
-header("Location: invoices.php");
+header("Location: /pages/invoices.php");
 exit();
 ?>

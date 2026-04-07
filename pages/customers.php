@@ -5,18 +5,37 @@ require_once '../config/db.php';
 include '../includes/header.php';
 
 $mid = $_SESSION['merchant_id'] ?? 1;
-$result = $conn->query(
-    "SELECT * FROM vw_customer_summary
-     WHERE business_name=(SELECT business_name FROM merchants WHERE merchant_id=$mid)"
-);
+
+if ($_SESSION['role'] === 'admin') {
+    $stmt = $conn->query(
+        "SELECT c.customer_id, c.full_name, c.email, c.phone,
+                m.business_name, COUNT(cr.card_id) AS cards_on_file
+         FROM customers c
+         JOIN merchants m ON c.merchant_id = m.merchant_id
+         LEFT JOIN cards cr ON c.customer_id = cr.customer_id
+         GROUP BY c.customer_id, m.business_name"
+    );
+} else {
+    $stmt = $conn->prepare(
+        "SELECT c.customer_id, c.full_name, c.email, c.phone,
+                m.business_name, COUNT(cr.card_id) AS cards_on_file
+         FROM customers c
+         JOIN merchants m ON c.merchant_id = m.merchant_id
+         LEFT JOIN cards cr ON c.customer_id = cr.customer_id
+         WHERE c.merchant_id = ?
+         GROUP BY c.customer_id, m.business_name"
+    );
+    $stmt->execute([$mid]);
+}
+$customers = $stmt->fetchAll();
 ?>
 <h2>👤 Customers</h2>
 <div style="margin-bottom:16px">
-  <a href="add_customer.php" class="btn btn-g">+ Add Customer</a>
+  <a href="/pages/add_customer.php" class="btn btn-g">+ Add Customer</a>
 </div>
 <table>
   <tr><th>#</th><th>Name</th><th>Email</th><th>Phone</th><th>Cards</th><th>Action</th></tr>
-  <?php while ($c = $result->fetch_assoc()): ?>
+  <?php foreach ($customers as $c): ?>
   <tr>
     <td><?= $c['customer_id'] ?></td>
     <td><strong><?= htmlspecialchars($c['full_name']) ?></strong></td>
@@ -28,12 +47,12 @@ $result = $conn->query(
       </span>
     </td>
     <td>
-      <a href="add_card.php?customer_id=<?= $c['customer_id'] ?>"
+      <a href="/pages/add_card.php?customer_id=<?= $c['customer_id'] ?>"
          class="btn btn-b" style="font-size:12px;padding:5px 10px">+ Add Card</a>
     </td>
   </tr>
-  <?php endwhile; ?>
-  <?php if ($result->num_rows === 0): ?>
+  <?php endforeach; ?>
+  <?php if (empty($customers)): ?>
   <tr><td colspan="6" style="text-align:center;color:#999;padding:24px">
     No customers yet.
   </td></tr>
